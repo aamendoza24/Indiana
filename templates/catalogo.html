@@ -1,0 +1,23 @@
+{% extends "layout.html" %}
+
+{% block title %}
+    Productos
+{% endblock %}
+
+{% block main %}
+<div class="row">
+    {% for producto in productos %}
+    <div class="col-xl-4 col-sm-6 grid-margin stretch-card">
+        <div class="card p-4 h-100 shadow">
+            <img src="{{ producto[3] }}" class="card-img-top " alt="Imagen de {{ producto[1] }}" 
+                 style="height: 150px; object-fit: cover; border-radius: 8px;">
+            <div class="card-body text-center">
+                <h5 class="card-title font-weight-normal">{{ producto[1] }}</h5>
+                <p class="card-text">Precio: C$ {{ producto[2] }}</p>
+                <button class="btn btn-primary agregar-carrito" data-id="{{ producto[0] }}">Agregar al carrito</button>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}

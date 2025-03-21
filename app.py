@@ -17,11 +17,11 @@ Session(app)
 database_path = "library.db"  # Ruta al archivo de la base de datos SQLite
 
 # Conexión con SQLite
-connection = sqlite3.connect(database_path, check_same_thread=False)  # Establece la conexión con la base de datos SQLite
+connection = sqlite3.connect(database_path, check_same_thread=False)  
 
 connection.row_factory = sqlite3.Row
 
-
+#Decorador de ruta para el requerimiento de inicio de sesion
 def login_required(f):
     """
     Decorate routes to require login.
@@ -79,6 +79,7 @@ def login():
             flash("Error al procesar la solicitud. Intenta nuevamente.", "danger")
 
     return render_template('samples/login.html')
+
 #cierre de sesion
 @app.route("/logout", methods=['POST'])
 def logout():
@@ -91,12 +92,21 @@ def logout():
     return redirect("/")
 
 # Ruta para la página principal
-@app.route('/index', methods=['GET', 'POST'])
+@app.route('/', methods=['GET', 'POST'])
 @login_required
 def index():
-    
-        
     return render_template("index.html")
+
+#ruta para mostrar los productos en el apartado de venta
+@app.route('/productos')
+def productos():
+    cursor = connection.cursor()
+    cursor.execute("SELECT IDProducto, Nombre, Precio, ImagenURL FROM Producto")
+    productos = cursor.fetchall()
+
+    
+    return render_template('catalogo.html', productos=productos)
+
 
 
 if __name__ == '__main__':
