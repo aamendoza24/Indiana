@@ -98,8 +98,8 @@ def index():
     return render_template("index.html")
 
 #ruta para mostrar los productos en el apartado de venta
-@app.route('/productos')
-def productos():
+@app.route('/catalogo')
+def catalogo():
     cursor = connection.cursor()
     cursor.execute("SELECT IDProducto, Nombre, Precio, ImagenURL FROM Producto")
     productos = cursor.fetchall()
