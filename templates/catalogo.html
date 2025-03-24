@@ -4,20 +4,110 @@
     Productos
 {% endblock %}
 
+{% block style %}
+<style>
+.card-img-top {
+    height: 150px;
+    object-fit: cover; /* O prueba "cover" según el diseño */
+    background-color: #f8f9fa;
+}
+</style>
+
+{% endblock %}
+
 {% block main %}
-<div class="row">
-    {% for producto in productos %}
-    <div class="col-xl-4 col-sm-6 grid-margin stretch-card">
-        <div class="card p-4 h-100 shadow">
-            <img src="{{ producto[3] }}" class="card-img-top " alt="Imagen de {{ producto[1] }}" 
-                 style="height: 150px; object-fit: cover; border-radius: 8px;">
-            <div class="card-body text-center">
-                <h5 class="card-title font-weight-normal">{{ producto[1] }}</h5>
-                <p class="card-text">Precio: C$ {{ producto[2] }}</p>
-                <button class="btn btn-primary agregar-carrito" data-id="{{ producto[0] }}">Agregar al carrito</button>
-            </div>
+<div class="container">
+    <!-- Filtros: Categoría y Barra de búsqueda -->
+    <div class="row mb-3">
+        <div class="col-md-3">
+            <select id="categoria" class="form-control">
+                <option value="todas">Todos los productos</option>
+                {% for categoria in categorias %}
+                <option value="{{ categoria[0] }}">{{ categoria[1] }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-md-4">
+            <input type="text" id="busqueda" class="form-control" placeholder="Buscar Producto">
         </div>
     </div>
-    {% endfor %}
+
+    <!-- Contenedor de productos -->
+    <div class="row" id="productos-container">
+        {% for producto in productos %}
+        <div class="col-xl-4 col-sm-6 grid-margin stretch-card producto" 
+             data-categoria="{{ producto[4] }}" data-nombre="{{ producto[1] | lower }}">
+            <div class="card p-4 h-100 shadow">
+                <img src="{{ producto[3] }}" class="card-img-top " alt="Imagen de {{ producto[1] }}" 
+                     style="height: 150px; object-fit: cover; border-radius: 8px;">
+                <div class="card-body text-center">
+                    <h5 class="card-title font-weight-normal">{{ producto[1] }}</h5>
+                    <p class="card-text">Precio: C$ {{ producto[2] }}</p>
+                    <button class="btn btn-primary agregar-carrito"
+                        data-id="{{ producto[0] }}"
+                        data-nombre="{{ producto[1] }}"
+                        data-precio="{{ producto[2] }}">
+                        Agregar al carrito
+                    </button>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
 </div>
+
+<script>
+$(document).ready(function(){
+    // Evento para agregar productos al carrito
+    $(".agregar-carrito").click(function(){
+        let idProducto = $(this).data("id");
+        let nombreProducto = $(this).data("nombre");
+        let precioProducto = $(this).data("precio");
+
+        $.ajax({
+            url: "/agregar_carrito",
+            method: "POST",
+            contentType: "application/json",
+            data: JSON.stringify({
+                id: idProducto,
+                nombre: nombreProducto,
+                precio: precioProducto
+            }),
+            success: function(response) {
+                alert("Producto agregado al carrito 🛒");
+            }
+        });
+    });
+
+    // Filtro por categoría
+    $("#categoria").change(function(){
+        filtrarProductos();
+    });
+
+    // Filtro por búsqueda
+    $("#busqueda").on("input", function(){
+        filtrarProductos();
+    });
+
+    function filtrarProductos() {
+        let categoriaSeleccionada = $("#categoria").val();
+        let textoBusqueda = $("#busqueda").val().toLowerCase();
+
+        $(".producto").each(function(){
+            let categoriaProducto = $(this).data("categoria");
+            let nombreProducto = $(this).data("nombre");
+
+            let coincideCategoria = (categoriaSeleccionada === "todas" || categoriaSeleccionada == categoriaProducto);
+            let coincideBusqueda = nombreProducto.includes(textoBusqueda);
+
+            if (coincideCategoria && coincideBusqueda) {
+                $(this).show();
+            } else {
+                $(this).hide();
+            }
+        });
+    }
+});
+</script>
+
 {% endblock %}

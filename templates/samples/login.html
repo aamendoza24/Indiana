@@ -1,85 +1,102 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="es">
   <head>
-    <!-- Required meta tags -->
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
     <title>Login Library</title>
-    <!-- plugins:css -->
+
+    <!-- Estilos -->
     <link rel="stylesheet" href="../../static/vendors/mdi/css/materialdesignicons.min.css">
     <link rel="stylesheet" href="../../static/vendors/css/vendor.bundle.base.css">
-    <!-- endinject -->
-    <!-- Plugin css for this page -->
-    <!-- End plugin css for this page -->
-    <!-- inject:css -->
-    <!-- endinject -->
-    <!-- Layout styles -->
     <link rel="stylesheet" href="../../static/css/style.css">
-    <!-- End layout styles -->
     <link rel="shortcut icon" href="../../static/images/favicon.png" />
 
+    <!-- SweetAlert2 -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
   </head>
-  <body >
-    {% with messages = get_flashed_messages(with_categories=true) %}
-    {% if messages %}
-        <div class="container mt-3">
-            {% for category, message in messages %}
-                <div class="alert alert-{{ category }}" role="alert">
-                    {{ message }}
-                </div>
-            {% endfor %}
-        </div>
-    {% endif %}
-    {% endwith %}
 
+  <body>
     <div class="container-scroller">
       <div class="container-fluid page-body-wrapper full-page-wrapper">
         <div class="row w-100 m-0">
           <div class="content-wrapper full-page-wrapper d-flex align-items-center auth login-bg">
             <div class="card col-lg-4 mx-auto">
               <div class="card-body px-5 py-5">
-                <h3 class="card-title text-center mb-3">Libreria Indiana</h3>
-                <form action="/login" method="post">
+                <h3 class="card-title text-center mb-3">Librería Indiana</h3>
+                <form id="loginForm">
                   <div class="form-group">
-                    <label>Usuario o Correo electronico</label>
-                    <input name="username" type="text" class="form-control p_input">
+                    <label>Usuario o Correo Electrónico</label>
+                    <input name="username" id="username" type="text" class="form-control p_input" required>
                   </div>
                   <div class="form-group">
                     <label>Contraseña</label>
-                    <input name="password" type="text" class="form-control p_input">
+                    <input name="password" id="password" type="password" class="form-control p_input" required>
                   </div>
                   <div class="form-group d-flex align-items-center justify-content-between">
-
                     <a href="#" class="forgot-pass">¿Olvidaste la contraseña?</a>
                   </div>
                   <div class="text-center">
-                    <button type="submit" class="btn btn-primary btn-block enter-btn">Iniciar Sesion</button>
+                    <button type="submit" class="btn btn-primary btn-block enter-btn">Iniciar Sesión</button>
                   </div>
-
-
                 </form>
               </div>
             </div>
           </div>
-          <!-- content-wrapper ends -->
         </div>
-        <!-- row ends -->
       </div>
-      <!-- page-body-wrapper ends -->
     </div>
-    <!-- container-scroller -->
-    <!-- plugins:js -->
+
+    <!-- Scripts -->
     <script src="../../static/vendors/js/vendor.bundle.base.js"></script>
-    <!-- endinject -->
-    <!-- Plugin js for this page -->
-    <!-- End plugin js for this page -->
-    <!-- inject:js -->
+
     <script src="../../static/js/off-canvas.js"></script>
     <script src="../../static/js/hoverable-collapse.js"></script>
     <script src="../../static/js/misc.js"></script>
     <script src="../../static/js/settings.js"></script>
     <script src="../../static/js/todolist.js"></script>
     
-    <!-- endinject -->
+
+    <script>
+      document.addEventListener("DOMContentLoaded", function() {
+          document.getElementById("loginForm").addEventListener("submit", function(event) {
+              event.preventDefault();  // Evita recargar la página
+
+              let formData = new FormData(this);
+
+              fetch("/login", {
+                  method: "POST",
+                  body: formData
+              })
+              .then(response => response.json())
+              .then(data => {
+                  if (data.success) {
+                      Swal.fire({
+                          icon: "success",
+                          title: "¡Éxito!",
+                          text: data.message,
+                          showConfirmButton: false,
+                          timer: 2000
+                      }).then(() => {
+                          window.location.href = data.redirect;  // Redirige después de mostrar el mensaje
+                      });
+                  } else {
+                      Swal.fire({
+                          icon: "error",
+                          title: "Error",
+                          text: data.message
+                      });
+                  }
+              })
+              .catch(error => {
+                  console.error("Error:", error);
+                  Swal.fire({
+                      icon: "error",
+                      title: "Error",
+                      text: "Hubo un problema con la conexión."
+                  });
+              });
+          });
+      });
+    </script>
   </body>
 </html>

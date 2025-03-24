@@ -17,6 +17,8 @@
     <!-- End plugin css for this page -->
     <!-- inject:css -->
     <!-- endinject -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
     <!-- Layout styles -->
     <link rel="stylesheet" href="../static/css/style.css">
     <!-- End layout styles -->
@@ -96,7 +98,9 @@
             <div class="collapse" id="ui-basic">
               <ul class="nav flex-column sub-menu">
                 <li class="nav-item"> <a class="nav-link" href="{{ url_for('catalogo') }}">Productos</a></li>
-                <li class="nav-item"> <a class="nav-link" href="{{ url_for('catalogo') }}" >Carrito</a></li>
+                <li class="nav-item"> <a class="nav-link" href="{{ url_for('ver_carrito') }}" >Carrito</a></li>
+                <li class="nav-item"> <a class="nav-link" href="{{ url_for('ventas') }}" >Historial de Ventas</a></li>
+
               </ul>
             </div>
           </li>
@@ -169,7 +173,7 @@
                     </div>
                   </a>
                   <div class="dropdown-divider"></div>
-                  <a class="dropdown-item preview-item">
+                  <a id="logout-link" class="dropdown-item preview-item">
                     <div class="preview-thumbnail">
                       <div class="preview-icon bg-dark rounded-circle">
                         <i class="mdi mdi-logout text-danger"></i>
@@ -224,6 +228,19 @@
     <!-- endinject -->
     <!-- Custom js for this page -->
     <script src="../static/js/dashboard.js"></script>
+
+    <script>
+      document.getElementById("logout-link").addEventListener("click", function(event) {
+          event.preventDefault(); // Evita la redirección inmediata
+      
+          fetch("/logout", { method: "POST" })
+          .then(response => {
+              if (response.redirected) {
+                  window.location.href = response.url; // Redirige a la página de inicio de sesión
+              }
+          });
+      });
+      </script>
     <!-- End custom js for this page -->
   </body>
 </html>
