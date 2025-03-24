@@ -148,7 +148,7 @@ def agregar_al_carrito():
     session["carrito"] = carrito
     session.modified = True  # Asegura que Flask guarde los cambios en la sesión
 
-    return jsonify({"message": "Producto agregado al carrito", "carrito": carrito})
+    return jsonify({"success": True, "message": "Producto agregado al carrito!"})
 
 
 #ruta en donde se podra visualizar el carrito y finalizar las ventas
@@ -290,6 +290,100 @@ def detalles_venta(id_venta):
     
     conexion.close()
     return jsonify({"detalles": detalles})
+
+
+#Ruta para la pagina de Compras
+@app.route("/compras", methods=["GET", "POST"])
+def compras():
+    db = get_db_connection()  # Usamos get_db_connection() para obtener la conexión
+    
+    if request.method == "POST":
+        proveedor_id = request.form["proveedor"]
+        producto_id = request.form["producto"]
+        cantidad = int(request.form["cantidad"])
+        sucursal_id = request.form["sucursal"]
+        
+        # Obtener precio del producto
+        cursor = db.cursor()
+        cursor.execute("SELECT Precio FROM Producto WHERE IDProducto = ?", (producto_id,))
+        producto = cursor.fetchone()
+        
+        if not producto:
+            flash("Producto no encontrado", "danger")
+            return redirect(url_for("compras"))
+        
+        precio = producto[0]
+        subtotal = precio * cantidad
+
+        # Insertar en la tabla Compra
+        fecha_actual = datetime.now().strftime("%Y-%m-%d")
+        db.execute("INSERT INTO Compra (Fecha, Total) VALUES (?, ?)", (fecha_actual, subtotal))
+        
+        # Consultar el ID de la última compra insertada
+        cursor.execute("SELECT last_insert_rowid()")
+        compra_id = cursor.lastrowid  # Obtiene el último ID insertado de manera más segura
+        
+        # Insertar en Detalle_Compra
+        db.execute(
+            "INSERT INTO Detalle_Compra (IDCompra, IDProducto, IDProveedor, IDSucursal, Cantidad, Subtotal) VALUES (?, ?, ?, ?, ?, ?)",
+            (compra_id, producto_id, proveedor_id, sucursal_id, cantidad, subtotal))
+        
+
+        # Verificar si ya hay stock del producto en la sucursal
+        cursor.execute("SELECT Cantidad FROM Stock_Sucursal WHERE IDSucursal = ? AND IDProducto = ?", (sucursal_id, producto_id))
+        stock_existente = cursor.fetchone()
+
+        if stock_existente:
+            # Si existe, actualizar la cantidad
+            db.execute("UPDATE Stock_Sucursal SET Cantidad = Cantidad + ? WHERE IDSucursal = ? AND IDProducto = ?", 
+                        (cantidad, sucursal_id, producto_id))
+        else:
+        # Si no existe, insertar nueva entrada
+            db.execute("INSERT INTO Stock_Sucursal (IDSucursal, IDProducto, Cantidad) VALUES (?, ?, ?)", 
+                        (sucursal_id, producto_id, cantidad))
+
+        # Insertar en Stock_Sucursal
+        #db.execute(
+            #"INSERT INTO Stock_Sucursal (IDSucursal, IDProducto, Cantidad) VALUES ( ?, ?, ?)",
+            #(sucursal_id, producto_id, cantidad))
+
+
+        # Actualizar stock
+        #db.execute(
+            #"UPDATE Stock_Sucursal SET Cantidad = Cantidad + ? WHERE IDProducto = ? AND IDSucursal = ?",
+            #(cantidad, producto_id, sucursal_id))
+
+        db.commit()
+
+        flash("Compra registrada con éxito", "success")
+        return redirect(url_for("compras"))
+
+
+    # Obtener datos para el formulario
+    #Obtenemos datos de ka base de datos
+    proveedores = db.execute("SELECT * FROM Proveedor").fetchall()
+    productos = db.execute("SELECT * FROM Producto").fetchall()
+    #obtenemos una lista de todas las sucursales sin repeticiones con DISTINCT
+    #El comando .fetchall recoge todos los resultados de las consultas y los almacena en las variables establecidas
+    sucursales = db.execute("SELECT  IDSucursal, Nombre FROM Sucursal").fetchall()
+    compras_realizadas = db.execute("""
+        SELECT c.IDCompra, c.Fecha, c.Total, p.Nombre AS Producto, pr.Nombre AS Proveedor, d.Cantidad
+        FROM Compra c
+        JOIN Detalle_Compra d ON c.IDCompra = d.IDCompra
+        JOIN Producto p ON d.IDProducto = p.IDProducto
+        JOIN Proveedor pr ON d.IDProveedor = pr.IDProveedor
+    """).fetchall()
+
+    print(compras_realizadas ,"aqui paso")  # Verifica los resultados en la consola
+
+    return render_template(
+        "compras.html", 
+        proveedores=proveedores,  # Aquí, la variable proveedores es una lista de proveedores obtenida de la base de datos.
+                                  # Esta variable es pasada al template para que pueda ser utilizada en el formulario para seleccionar un proveedor.
+        productos=productos, 
+        sucursales=sucursales, 
+        compras_realizadas=compras_realizadas
+    )
 
 
 if __name__ == '__main__':

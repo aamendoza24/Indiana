@@ -74,8 +74,15 @@ $(document).ready(function(){
                 precio: precioProducto
             }),
             success: function(response) {
-                alert("Producto agregado al carrito 🛒");
+                Swal.fire({
+                    icon: "success",
+                    title: "¡Producto agregado al carrito!",
+                    text: response.message,  // Cambia "data.message" por "response.message"
+                    showConfirmButton: true,
+                    timer: 2000
+                });
             }
+
         });
     });
 

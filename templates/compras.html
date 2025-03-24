@@ -1,0 +1,79 @@
+{% extends "layout.html" %}
+
+{% block title %}Compras{% endblock %}
+
+{% block main %}
+<div class="container">
+    <h2 class="mt-4">Registro de Compras</h2>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="alert alert-{{ category }}">{{ message }}</div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
+    <form action="{{ url_for('compras') }}" method="POST" class="mt-4">
+        <div class="form-group">
+            <label for="proveedor">Proveedor:</label>
+            <select name="proveedor" id="proveedor" class="form-control" required>
+                {% for proveedor in proveedores %}
+                    <option value="{{ proveedor.IDProveedor }}">{{ proveedor.Nombre }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label for="producto">Producto:</label>
+            <select name="producto" id="producto" class="form-control" required>
+                {% for producto in productos %}
+                    <option value="{{ producto.IDProducto }}">{{ producto.Nombre }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label for="cantidad">Cantidad:</label>
+            <input type="number" name="cantidad" id="cantidad" class="form-control" required>
+        </div>
+
+        <div class="form-group">
+            <label for="sucursal">Sucursal:</label>
+            <select name="sucursal" id="sucursal" class="form-control" required>
+                {% for sucursal in sucursales %}
+                    <option value="{{ sucursal.IDSucursal }}">{{ sucursal.Nombre }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <button type="submit" class="btn btn-primary mt-3">Registrar Compra</button>
+    </form>
+
+    <h3 class="mt-5">Historial de Compras</h3>
+    <table class="table table-striped mt-3">
+        <thead>
+            <tr>
+                <th>ID Compra</th>
+                <th>Fecha</th>
+                <th>Total</th>
+                <th>Producto</th>
+                <th>Proveedor</th>
+                <th>Cantidad</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for compra in compras_realizadas %}
+                <tr>
+                    <td>{{ compra.IDCompra }}</td>
+                    <td>{{ compra.Fecha }}</td>
+                    <td>{{ compra.Total }}</td>
+                    <td>{{ compra.Producto }}</td>
+                    <td>{{ compra.Proveedor }}</td>
+                    <td>{{ compra.Cantidad }}</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}
