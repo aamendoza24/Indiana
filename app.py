@@ -104,7 +104,33 @@ def logout():
 @app.route('/', methods=['GET', 'POST'])
 @login_required
 def index():
-    return render_template("index.html")
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("""
+        SELECT p.IDProducto, p.Nombre, p.Precio, p.ImagenURL, p.IDCategoria, c.Nombre, 
+               s.Cantidad AS stock_total
+        FROM Producto AS p
+        JOIN Categoria AS c ON p.IDCategoria = c.IDCategoria
+        JOIN Stock_Sucursal AS s ON p.IDProducto = s.IDProducto
+        WHERE s.IDSucursal = 1
+    """)
+    
+    productos = cursor.fetchall()
+
+    # Lista para productos con stock bajo
+    productos_bajo_stock = []
+
+    for producto in productos:
+        id_producto, nombre, precio, imagen, id_categoria, categoria_nombre, stock = producto
+        if stock < 10:
+            productos_bajo_stock.append(f"{nombre} ({stock} unidades)")
+
+    # Si hay productos con bajo stock, mostrar un solo mensaje flash
+    if productos_bajo_stock:
+        mensaje = "⚠️ Los siguientes productos tienen bajo stock:\n" + ", ".join(productos_bajo_stock)
+        flash(mensaje, "warning")
+
+    return render_template("index.html", productos=productos)
 
 #ruta para mostrar los productos en el apartado de venta
 @app.route('/catalogo')
@@ -229,8 +255,8 @@ def finalizar_venta():
         cursor.execute("INSERT INTO Detalle_Venta (IDVenta, IDProducto, Cantidad, PrecioUnitario) VALUES (?, ?, ?, ?)",
                        (id_venta, item["id"], item["cantidad"], item["precio"]))
 
-        # Actualizar el stock del producto
-        #cursor.execute("UPDATE productos SET stock = stock - ? WHERE id = ?", (item["cantidad"], item["id"]))
+        #Actualizar el stock del producto
+        cursor.execute("UPDATE Stock_Sucursal SET Cantidad = Cantidad - ? WHERE IDProducto = ?", (item["cantidad"], item["id"]))
 
     conn.commit()
     conn.close()
@@ -239,7 +265,7 @@ def finalizar_venta():
     session["carrito"] = []
     session.modified = True
 
-    return jsonify({"success": True})
+    return jsonify({"success": True, "message": "Venta finalizada correctamente!"})
 
 
 def obtener_ventas(filtro):
@@ -384,6 +410,31 @@ def compras():
         sucursales=sucursales, 
         compras_realizadas=compras_realizadas
     )
+
+#ruta para mostrar el stock de productos
+@app.route("/stock")
+def mostrar_stock():
+    conexion = get_db_connection()
+    cursor = conexion.cursor()
+
+    cursor.execute("""
+        SELECT p.IDProducto, p.Nombre, p.Precio, p.ImagenURL, p.IDCategoria, c.Nombre, 
+               s.Cantidad AS stock_total
+        FROM Producto AS p
+        JOIN Categoria AS c ON p.IDCategoria = c.IDCategoria
+        JOIN Stock_Sucursal AS s ON p.IDProducto = s.IDProducto
+        WHERE s.IDSucursal = 1
+    """)
+    
+    productos = cursor.fetchall()
+
+    cursor.execute("SELECT IDCategoria, Nombre FROM Categoria")
+    categorias = cursor.fetchall()
+
+    conexion.close()
+    
+    return render_template("stock.html", productos=productos, categorias=categorias)
+
 
 
 if __name__ == '__main__':
