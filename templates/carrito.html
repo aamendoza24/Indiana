@@ -115,8 +115,15 @@
                     url: "/finalizar_venta",
                     method: "POST",
                     success: function(response) {
-                        alert("Venta realizada con éxito!");
-                        window.location.href = "/catalogo";
+                    Swal.fire({
+                            icon: "success",
+                            title: "¡Venta finalizada!",
+                            text: response.message,  // Cambia "data.message" por "response.message"
+                            showConfirmButton: true,
+                            timer: 2000
+                        }).then(() => {
+                    window.location.href = "/catalogo";  // Cambia "/ruta_de_redireccion" por la URL a la que quieres ir
+                    });;
                     },
                     error: function() {
                         alert("Hubo un error al finalizar la venta.");
