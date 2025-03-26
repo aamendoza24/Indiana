@@ -64,33 +64,6 @@
         Registrar Compra
     </button>
 
-    <!-- Historial de Compras -->
-    <h3 class="mt-5">Historial de Compras</h3>
-    <table class="table table-hover table-light">
-        <thead>
-            <tr>
-                <th>Fecha</th>
-                <th>Proveedor</th>
-                <th>Producto</th>
-                <th>Cantidad</th>
-                <th>Sucursal</th> <!-- Nueva columna para la sucursal -->
-                <th>Total</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for compra in compras_realizadas %}
-            <tr>
-                <td>{{ compra.Fecha }}</td>
-                <td>{{ compra.Proveedor }}</td>
-                <td>{{ compra.Producto }}</td>
-                <td>{{ compra.Cantidad }}</td>
-                <td>{{ compra.Sucursal }}</td> <!-- Mostrar la sucursal -->
-                <td>{{ compra.Total }}</td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
-
 </div>
 
 <script>
