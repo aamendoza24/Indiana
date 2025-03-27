@@ -317,6 +317,48 @@ def detalles_venta(id_venta):
     conexion.close()
     return jsonify({"detalles": detalles})
 
+
+
+#historial de compras
+@app.route("/historial_compras")
+def historial_compras():
+    conexion = get_db_connection()
+    cursor = conexion.cursor()
+
+    cursor.execute("SELECT IDCompra, Fecha, Total FROM Compra")
+    compras = [
+        {"id": row[0], "fecha": row[1], "total": row[2]}
+        for row in cursor.fetchall()
+    ]
+
+    conexion.close()
+    return render_template("historial_compras.html", compras=compras)
+
+
+#Detalle de las compras
+@app.route("/detalles_compra/<int:id_compra>", methods=["GET"])
+def detalles_compra(id_compra):
+    conexion = get_db_connection()
+    cursor = conexion.cursor()
+
+    cursor.execute("""
+            SELECT  c.Fecha, pr.Nombre AS Proveedor, p.Nombre AS Producto,d.Cantidad,s.Nombre AS Sucursal,  c.Total
+            FROM Compra c
+            JOIN Detalle_Compra d ON c.IDCompra = d.IDCompra
+            JOIN Producto p ON d.IDProducto = p.IDProducto
+            JOIN Proveedor pr ON d.IDProveedor = pr.IDProveedor
+            JOIN Sucursal s ON d.IDSucursal = s.IDSucursal
+            WHERE d.IDCompra = ?
+    """, (id_compra,))
+
+    detalles = [
+        {"Fecha": row[0], "Proveedor": row[1], "Producto": row[2],  "Cantidad": row[3], "Sucursal": row[4], "Total": row[5]}
+        for row in cursor.fetchall()
+    ]
+    
+    conexion.close()
+    return jsonify({"detalles": detalles})
+
 # Ruta para finalizar compra y agregar toda la información necesaria a la base de datos
 @app.route("/compras", methods=["GET", "POST"])
 def compras():
@@ -402,15 +444,15 @@ def compras():
         sucursales = db.execute("SELECT IDSucursal, Nombre FROM Sucursal").fetchall()
         
         # Consultar las compras realizadas
-        compras_realizadas = db.execute(""" 
-            SELECT c.IDCompra, c.Fecha, c.Total, p.Nombre AS Producto, pr.Nombre AS Proveedor, d.Cantidad, s.Nombre AS Sucursal
-            FROM Compra c
-            JOIN Detalle_Compra d ON c.IDCompra = d.IDCompra
-            JOIN Producto p ON d.IDProducto = p.IDProducto
-            JOIN Proveedor pr ON d.IDProveedor = pr.IDProveedor
-            JOIN Sucursal s ON d.IDSucursal = s.IDSucursal
+        #compras_realizadas = db.execute(""" 
+            #SELECT c.IDCompra, c.Fecha, c.Total, p.Nombre AS Producto, pr.Nombre AS Proveedor, d.Cantidad, s.Nombre AS Sucursal
+            #FROM Compra c
+            #JOIN Detalle_Compra d ON c.IDCompra = d.IDCompra
+            #JOIN Producto p ON d.IDProducto = p.IDProducto
+            #JOIN Proveedor pr ON d.IDProveedor = pr.IDProveedor
+            #JOIN Sucursal s ON d.IDSucursal = s.IDSucursal
 
-        """).fetchall()
+        #""").fetchall()
 
         
 
@@ -419,7 +461,7 @@ def compras():
             proveedores=proveedores, 
             productos=productos, 
             sucursales=sucursales, 
-            compras_realizadas=compras_realizadas
+            #compras_realizadas=compras_realizadas
         )
 
 
